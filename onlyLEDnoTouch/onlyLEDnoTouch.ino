@@ -11,7 +11,7 @@ const int numStrips = sizeof(neoPins) / sizeof(int);
 Adafruit_NeoPixel strip(pixelCount, neoPins[0], NEO_GRB + NEO_KHZ800);
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   strip.begin();
   strip.setBrightness(brightness);
@@ -23,31 +23,7 @@ volatile bool stateChanged = false;
 volatile byte touch = 0;
 
 void loop() {
-  //  if (stateChanged){
-  //    stateChanged = false;
-  //
-  //    for (int i = 0; i < numStrips; i++){
-  //      //if active, hex should fire
-  //      if (touch >> i & 1){
-  //        Serial.print("hexagon active: ");
-  //        Serial.println(i);
-  //
-  //        strip.setPin(neoPins[i]);
-  //        Fire(69, 420);  //;)
-  //      }
-  //      else {
-  //        Serial.print("hexagon inactive: ");
-  //        Serial.println(i);
-  //      }
-  //    }
-  //  }
-//  while (Serial.available()){
-//    byte c = Serial.read();
-//    if (c == '1' || c == '0'){
-//      touch = 
-//    }
-//  }
-
+  //hue fade
   if (millis() - lastmillis >= delaytime) {
     lastmillis = millis();
 
@@ -62,6 +38,39 @@ void loop() {
     hue += 1000;
     Serial.println(hue);
   }
+
+  //do something when touch signal
+  /*
+    if (stateChanged) {
+    stateChanged = false;
+
+    for (int i = 0; i < numStrips; i++) {
+      //if active, hex should fire
+      if (touch >> i & 1) {
+        Serial.print("hexagon active: ");
+        Serial.println(i);
+
+        strip.setPin(neoPins[i]);
+        Fire(69, 420);  //;)
+      }
+      else {
+        Serial.print("hexagon inactive: ");
+        Serial.println(i);
+      }
+    }
+    }
+    while (Serial.available()) {
+    byte c = Serial.read();
+    if (c == '1' || c == '0') {
+      touch =
+    }
+    }
+  */
+}
+
+void Sparkle() {
+  strip.setPixelColor(random(pixelCount), random(255), random(255), random(255));
+  strip.show();
 }
 
 void setAll(uint32_t color) {
@@ -126,19 +135,6 @@ void setPixelHeatColor (int Pixel, byte temperature) {
   }
 }
 
-//Wire receive
-void receiveData(int howMany) {
-  touch = Wire.read();
-  stateChanged = true;
-
-  Serial.print("incoming byte: ");
-  Serial.println(touch, BIN);
-}
-
-void Sparkle() {
-  strip.setPixelColor(random(pixelCount), random(255), random(255), random(255));
-  strip.show();
-}
 
 //zero indexed
 void hexagonSetPixel(byte ringnum, byte lednum, uint32_t color) {

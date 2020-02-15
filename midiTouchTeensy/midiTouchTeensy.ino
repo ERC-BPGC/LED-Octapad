@@ -1,6 +1,7 @@
 #include <Wire.h>
 
 #define midi_channel 1
+#define useSerial true
 
 #define touch_threshold_upper 7000
 #define touch_threshold_lower 4000
@@ -46,9 +47,11 @@ byte notes[] = {24, 40, 43, 47, 50, 55};
 
 void setup() {
   Serial.begin(115200);
-//  Serial3.begin(115200);
-  Wire.begin();
-  
+  #if useSerial
+    Serial3.begin(115200);
+  #else
+    Wire.begin()
+  #endif  
 }
 
 
@@ -99,20 +102,25 @@ void checkStatus(touchPad& pad) {
 }
 
 //sends ledslave the byte containing the state of each touch sensor
+//uses serial3 if useSerial is true, otherwise will send i2c to device #2
 void sendSlave(byte id, bool on_off) {
   static byte sendByte = 0;
+  //generate touch byte
   if (on_off) {
     sendByte |= 1 << id;
   }
   else {
     sendByte ^= 1 << id;
   }
-  Serial.print("sendbyte: ");
-  Serial.println(sendByte, BIN);
-
-  Wire.beginTransmission(2);
-  Wire.write(sendByte);
-  Wire.endTransmission();
   
-  Serial3.println(sendByte);
+  #if useSerial
+    Serial3.println(sendByte);
+  #else
+    Wire.beginTransmission(2);
+    Wire.write(sendByte);
+    Wire.endTransmission();
+  #endif
+  
+  Serial.print("sendbyte: ");
+  Serial.println(sendByte, BIN);  
 }
