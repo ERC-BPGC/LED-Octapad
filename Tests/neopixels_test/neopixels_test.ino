@@ -3,7 +3,7 @@
 #include <Adafruit_NeoPixel.h>
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN        10 // On Trinket or Gemma, suggest changing this to 1
+#define PIN        14 // On Trinket or Gemma, suggest changing this to 1
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 54 // Popular NeoPixel strip size
@@ -28,4 +28,15 @@ void loop() {
     pixels.show();   // Send the updated pixel colors to the hardware.
     delay(DELAYVAL); // Pause before next pass through loop
   }
+  for (int i = 0; i < 255; i++){
+    setAll(i, i, i);
+    delay(DELAYVAL);
+  }
+}
+
+void setAll(byte r, byte g, byte b) {
+  for (int i = 0; i < NUMPIXELS; i++) {
+    pixels.setPixelColor(i, r, g, b);
+  }
+  pixels.show();
 }

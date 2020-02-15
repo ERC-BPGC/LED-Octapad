@@ -3,7 +3,7 @@
 
 #define pixelCount 54
 #define delaytime 50
-#define brightness 255
+#define brightness 100
 
 int neoPins[] = {34, 35, 32, 33, 25, 26};
 const int numStrips = sizeof(neoPins) / sizeof(int);
@@ -12,7 +12,10 @@ Adafruit_NeoPixel strip(pixelCount, neoPins[0], NEO_GRB + NEO_KHZ800);
 
 void setup() {
   Serial.begin(115200);
-
+  //default pins on esp32 are 21(sda) and 22(scl)
+  Wire.begin(2);
+  Wire.onReceive(receiveData);
+  
   strip.begin();
   strip.setBrightness(brightness);
 }
