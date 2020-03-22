@@ -1,20 +1,32 @@
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
 
-#define pixelCount 54
-#define delaytime 50
-#define brightness 255
+#define pixelCount 54     // 54 leds per hexagon
+#define brightness 255    // reduce to cut power consumption
 
 //set this to true if using serial to communicate with teensy
-#define useSerial true
+#define serialDebug true
+#define indicatorLED 10
 
-int neoPins[] = {34, 35, 32, 33, 25, 26};
+// pin numbers for each hexagon ka strip
+int neoPins[] = {2, 3, 4, 5, 6, 7};
 const int numStrips = sizeof(neoPins) / sizeof(int);
+
+// commpins are like a direct bus from the touch uC
+byte commPins[] = {16, 14, 15, 18, 19, 20};
+bool commStates[6] = {0}, prevCommStates[6] = {0};
 
 Adafruit_NeoPixel strip(pixelCount, neoPins[0], NEO_GRB + NEO_KHZ800);
 
 void setup() {
   Serial.begin(9600);
+
+  pinMode(indicatorLED, OUTPUT);
+  indicateLED();
+
+  for (int i = 0; i < 6; i++) {
+    pinMode(commPins[i], INPUT);
+  }
 
   strip.begin();
   strip.setBrightness(brightness);
@@ -26,65 +38,42 @@ volatile bool stateChanged = false;
 volatile byte touch = 0;
 
 void loop() {
-  //hue fade
-  if (millis() - lastmillis >= delaytime) {
-    lastmillis = millis();
-
-    for (int i = 0; i < numStrips; i++) {
-      strip.setPin(neoPins[i]);
-      //if not active, hexagon should huefade
-      //      if (!(touch >> i & B00000001)) {
-      setAll(strip.ColorHSV(hue + 5000 * i));
-      //      }
+  // serial.print values if debug is true
+  #if serialDebug
+    for (int i = 0; i < 6; i++) {
+      commStates[i] = digitalRead(commPins[i]);
+      Serial.print(commStates[i]);
+      Serial.print('\t');
     }
+    Serial.println("");
+    delay(50);
+  #endif
 
-    hue += 1000;
-    Serial.println(hue);
+  // if a hexagon is touched, animate it with Fire()
+  // otherwise idle with a simple huefade
+  for (int i = 0; i < 6; i++) {
+    strip.setPin(neoPins[i]);
+    if (padIsActive(i)) {
+      Serial.print("active");
+      Fire(5553, 555);
+    }
+    else {
+      Serial.print("notfire");
+      setAll(strip.ColorHSV(hue + 4000 * i));
+    }
+    Serial.print('\t');
   }
+  Serial.println("");
 
-  //do something when touch signal
-  /*
-    if (stateChanged) {
-    stateChanged = false;
-
-    for (int i = 0; i < numStrips; i++) {
-      //if active, hex should fire
-      if (touch >> i & 1) {
-        Serial.print("hexagon active: ");
-        Serial.println(i);
-
-        strip.setPin(neoPins[i]);
-        Fire(69, 420);  //;)
-      }
-      else {
-        Serial.print("hexagon inactive: ");
-        Serial.println(i);
-      }
-    }
-    }
-    while (Serial.available()) {
-    byte c = Serial.read();
-    if (c == '1' || c == '0') {
-      touch =
-    }
-    }
-  */
+  hue += 600;
+  delay(10);
 }
 
-//receive data from serial is useSerial is true
-//else receive using i2c
-void receiveData(int howMany) {
-#if useSerial
-  touch = (byte) Serial.read();
-#else
-  touch = Wire.read();
-#endif
-  stateChanged = true;
-
-  Serial.print("incoming byte: ");
-  Serial.println(touch, BIN);
+bool padIsActive(byte id) {
+  return digitalRead(commPins[id]);
 }
 
+// not used currently but you can if you want!
 void Sparkle() {
   strip.setPixelColor(random(pixelCount), random(255), random(255), random(255));
   strip.show();
@@ -104,6 +93,17 @@ void setAll(byte r, byte g, byte b) {
   strip.show();
 }
 
+// helps with debugging
+void indicateLED() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(indicatorLED, HIGH);
+    delay(30);
+    digitalWrite(indicatorLED, LOW);
+    delay(90);
+  }
+}
+
+// a very cool neopixel animation
 void Fire(int Cooling, int Sparking) {
   static byte heat[pixelCount];
   int cooldown;
@@ -134,6 +134,7 @@ void Fire(int Cooling, int Sparking) {
   strip.show();
 }
 
+// helper function for Fire()
 void setPixelHeatColor (int Pixel, byte temperature) {
   // Scale 'heat' down from 0-255 to 0-191
   byte t192 = round((temperature / 255.0) * 191);
@@ -150,22 +151,4 @@ void setPixelHeatColor (int Pixel, byte temperature) {
   } else {                               // coolest
     strip.setPixelColor(Pixel, heatramp, 0, 0);
   }
-}
-
-
-//zero indexed
-void hexagonSetPixel(byte ringnum, byte lednum, uint32_t color) {
-  uint16_t pixelnum;
-  switch (ringnum) {
-    case 0:
-      pixelnum = lednum % 24;
-      break;
-    case 1:
-      pixelnum = 24 + lednum % 18;
-      break;
-    case 2:
-      pixelnum = 42 + lednum % 12;
-      break;
-  }
-  strip.setPixelColor(pixelnum, color);
 }
