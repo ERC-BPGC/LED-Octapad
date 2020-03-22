@@ -1,6 +1,9 @@
 # LED Octapad
 
-<img src = "https://github.com/DangerousTim/LED-Octapad/blob/master/Media/closeupnice.jpg" width=600>
+<p float='left'>
+<img src = "https://github.com/DangerousTim/LED-Octapad/blob/master/Media/closeupnice.jpg" width=400>
+<img src = "https://github.com/DangerousTim/LED-Octapad/blob/master/Media/nice2.jpg" width=400>
+</p>
 
 Well technically, an LED hexapad, but Octapad kinda stuck early on and no one wanted to change that name.
 
