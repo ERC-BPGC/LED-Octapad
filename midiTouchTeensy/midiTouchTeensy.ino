@@ -1,11 +1,16 @@
 #include <Wire.h>
 
 #define midi_channel 1
-#define useSerial true
+#define usePins true        //set usePins to true if direct pin2pin connection with ledslave
+#define printPadValues true
 
-#define touch_threshold_upper 7000
-#define touch_threshold_lower 4000
-#define debounce_time 100
+// threshold values for touch sensing
+#define touch_threshold_upper 4000
+#define touch_threshold_lower 3300
+#define debounce_time 80
+
+byte notes[] = {36, 52, 55, 59, 62, 67};    // corresponds to CM9 chord
+byte commPins[] = {17, 18, 19, 20, 21, 22}; // pins connected to UNO
 
 class touchPad {
   public:
@@ -20,8 +25,9 @@ class touchPad {
       isOn = false;
       lastChange = 0;
     }
+    // windowing of values and return the max
     long getValue() {
-      const int valsize = 50;
+      const int valsize = 10;
       long values[valsize];
       long maxval = 0;
 
@@ -35,6 +41,7 @@ class touchPad {
     }
 };
 
+// initialising pads
 touchPad pad1 = touchPad(0, 0);
 touchPad pad2 = touchPad(1, 1);
 touchPad pad3 = touchPad(3, 2);
@@ -43,34 +50,39 @@ touchPad pad4 = touchPad(4, 3);
 touchPad pad5 = touchPad(15, 4);
 touchPad pad6 = touchPad(16, 5);
 
-byte notes[] = {24, 40, 43, 47, 50, 55};
-
 void setup() {
   Serial.begin(115200);
-  #if useSerial
-    Serial3.begin(115200);
-  #else
-    Wire.begin()
-  #endif  
+  
+  for (int i = 0; i < 6; i++){
+    pinMode(commPins[i], OUTPUT);
+  }
 }
 
-
 void loop() {
+  long start = millis();
   checkStatus(pad1);
   checkStatus(pad2);
   checkStatus(pad3);
   checkStatus(pad4);
   checkStatus(pad5);
   checkStatus(pad6);
-  
-  Serial.println("");
-  delay(1);
+
+#if printPadValues
+  Serial.print("Time taken = #");
+  Serial.println(millis() - start);
+#endif
+  //  #if printPadValues
+  //    Serial.println("");
+  //  #endif
+  //  delay(1);
 }
 
 void checkStatus(touchPad& pad) {
   long padValue = pad.getValue();
-  Serial.print(padValue);
-  Serial.print('\t');
+  #if printPadValues
+    Serial.print(padValue);
+    Serial.print('\t');
+  #endif
 
   //include debounce condition
   if (padValue >= touch_threshold_upper && !pad.isOn
@@ -96,6 +108,7 @@ void checkStatus(touchPad& pad) {
     usbMIDI.sendNoteOff(notes[pad.id], 99, midi_channel);
     sendSlave(pad.id, false);
   }
+  // check if pad has been on for too long and is stuck
   //  if (pad.isOn && pad.lastChange - millis() > 1000){
   //    usbMIDI.sendNoteOff(notes[pad.id], 99, midi_channel);
   //  }
@@ -104,23 +117,23 @@ void checkStatus(touchPad& pad) {
 //sends ledslave the byte containing the state of each touch sensor
 //uses serial3 if useSerial is true, otherwise will send i2c to device #2
 void sendSlave(byte id, bool on_off) {
-  static byte sendByte = 0;
-  //generate touch byte
-  if (on_off) {
-    sendByte |= 1 << id;
-  }
-  else {
-    sendByte ^= 1 << id;
-  }
-  
-  #if useSerial
-    Serial3.println(sendByte);
+  #if usePins
+    digitalWrite(commPins[id], on_off);
+  //else use i2c (this was a bitch to get working)
   #else
+    static byte sendByte = 0;
+    //generate touch byte
+    if (on_off) {
+      sendByte |= 1 << id;
+    }
+    else {
+      sendByte ^= 1 << id;
+    }
+    Serial.print("sendbyte: ");
+    Serial.println(sendByte, BIN);
+  
     Wire.beginTransmission(2);
     Wire.write(sendByte);
     Wire.endTransmission();
   #endif
-  
-  Serial.print("sendbyte: ");
-  Serial.println(sendByte, BIN);  
 }
