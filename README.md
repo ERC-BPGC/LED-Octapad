@@ -1,5 +1,7 @@
 # LED Octapad
 
+<img src = "https://github.com/DangerousTim/LED-Octapad/blob/master/Media/closeupnice.jpg" width=600>
+
 Well technically, an LED hexapad, but Octapad kinda stuck early on and no one wanted to change that name.
 
 The LED Octapad is, at its heart, a MIDI controller, but specced up with _324_ individually controlled RGB LEDs. This means the pads are dynamic, reacting in real time to your touch, while also sending MIDI signals to your computer to play, say a virtual drum machine, or a virtual piano.
