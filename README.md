@@ -9,6 +9,10 @@ Well technically, an LED hexapad, but Octapad kinda stuck early on and no one wa
 
 The LED Octapad is, at its heart, a MIDI controller, but specced up with _324_ individually controlled RGB LEDs. This means the pads are dynamic, reacting in real time to your touch, while also sending MIDI signals to your computer to play, say a virtual drum machine, or a virtual piano.
 
+## Project Members
+Abhishek Dixit, [Aditya Bidwai](https://github.com/adbidwai), Advait Kulkarni, [Tanmay Bhonsale](https://github.com/DangerousTim), Tanmay Devale, Vedant Shah, Yash Jangir
+
+
 ## Uploading the code
 
 ### The touch controller
